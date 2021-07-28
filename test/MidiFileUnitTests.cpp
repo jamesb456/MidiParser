@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(test_rejects_non_midi) {
 
 
 struct MidiFileFixture {
-    virtual uint8_t get_expected_format() = 0;
-    virtual uint16_t get_expected_track_num() = 0;
+    virtual uint8_t get_expected_format() const = 0;
+    virtual uint16_t get_expected_track_num() const = 0;
 };
 
 // format 1, one track
@@ -29,8 +29,8 @@ struct SingleTrackFixture: public MidiFileFixture{
 
     }
 
-    uint8_t get_expected_format() { return 1; }
-    uint16_t get_expected_track_num() { return 1; }
+    uint8_t get_expected_format() const override { return 1; }
+    uint16_t get_expected_track_num() const override { return 1; }
     MidiParser::MidiFile file;
 };
 
@@ -41,19 +41,19 @@ struct MultiTrackFixture: public MidiFileFixture{
 
     }
 
-    uint8_t get_expected_format() { return 1; }
-    uint16_t get_expected_track_num() {return 2; }
+    uint8_t get_expected_format() const override { return 1; }
+    uint16_t get_expected_track_num() const override {return 2; }
     MidiParser::MidiFile file;
 };
 
 
 MULTI_FIXTURE_TEST_CASE(test_check_format, Fixture, SingleTrackFixture, MultiTrackFixture){
-    auto format = Fixture::file.get_number_of_tracks();
+    auto format = Fixture::file.get_format();
     BOOST_CHECK_EQUAL(format, Fixture::get_expected_format());
 }
 
 MULTI_FIXTURE_TEST_CASE(test_check_track_number, Fixture, SingleTrackFixture, MultiTrackFixture){
-    auto track_num = Fixture::file.get_expected_track_num();
+    auto track_num = Fixture::file.get_number_of_tracks();
     BOOST_CHECK_EQUAL(track_num, Fixture::get_expected_track_num());
 }
 

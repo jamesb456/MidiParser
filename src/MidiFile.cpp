@@ -4,7 +4,7 @@
 #include <MidiParser/MidiFile.hpp>
 #include <cstring>
 
-MidiParser::MidiFile::MidiFile(uint8_t format) : format(format) {
+MidiParser::MidiFile::MidiFile(uint8_t format, uint16_t track_num) : format(format), track_num(track_num) {
 
 }
 
@@ -22,13 +22,14 @@ MidiParser::MidiFile MidiParser::MidiFile::parse_midi(const std::filesystem::pat
                   std::istreambuf_iterator<char>(),
                   std::back_inserter(buffer));
 
+        mid_file.close();
 
         //first: check for MThd at the start of the MIDI file (bytes 1-4). If this
         //doesn't exist, we don't have a MIDI file!
 
         if(!std::equal(buffer.begin(), buffer.begin() + 4, std::begin(HEADER_START), std::end(HEADER_START))){
             throw std::invalid_argument("File at " + filepath.string() + " is not a MIDI file "
-                                                                         "(doesn't start with MThd)");
+                                                                         "(No header chunk at start)");
         }
         // looks like a header. check bytes 5-8 for the header length
         // (should usually be 6 bytes)
@@ -49,7 +50,9 @@ MidiParser::MidiFile MidiParser::MidiFile::parse_midi(const std::filesystem::pat
         uint8_t midi_format = buffer[FORMAT_INDEX];
         std::cout << "The MIDI uses track format " << static_cast<uint32_t>(midi_format) << std::endl;
 
-        return MidiFile(midi_format);
+        //number of tracks
+        uint16_t track_num = ( static_cast<uint16_t>(buffer[TRACKNUM_INDEX_HIGH]) << 4) | static_cast<uint16_t>(buffer[TRACKNUM_INDEX_LOW]);
+        return MidiFile(midi_format, track_num);
     } catch (const std::ifstream::failure&) {
         throw std::runtime_error(std::string("Could not parse MIDI with reason: ") + std::strerror(errno));
     }
