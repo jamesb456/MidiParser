@@ -2,9 +2,10 @@ project(MidiParserTests)
 set (Boost_USE_STATIC_LIBS OFF)
 
 find_package(Boost REQUIRED COMPONENTS unit_test_framework)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 
-add_executable(MidiParserTests MidiParserTests.cpp)
+add_executable(MidiParserTests MidiFileUnitTests.cpp)
 
 target_link_libraries(MidiParserTests Boost::unit_test_framework)
 target_link_libraries(MidiParserTests MidiParser)
