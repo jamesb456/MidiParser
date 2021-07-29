@@ -21,6 +21,7 @@ BOOST_AUTO_TEST_CASE(test_rejects_non_midi) {
 struct MidiFileFixture {
     virtual uint8_t get_expected_format() const = 0;
     virtual uint16_t get_expected_track_num() const = 0;
+
 };
 
 // format 1, one track
