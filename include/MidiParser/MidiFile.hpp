@@ -14,11 +14,13 @@ namespace MidiParser{
 
         uint8_t format;
         uint16_t track_num;
+        uint16_t ticks_per_quarter;
 
     public:
-        explicit MidiFile(uint8_t format, uint16_t track_num);
+        explicit MidiFile(uint8_t format, uint16_t track_num, uint16_t ticks_per_quarter);
         uint8_t get_format() const { return this->format; };
-        uint16_t get_number_of_tracks() const {return this->track_num; }
+        uint16_t get_number_of_tracks() const { return this->track_num; }
+        uint16_t get_ticks_per_quarter() const  { return this->ticks_per_quarter; }
 
         /// Parse the midi file at filepath.
         /// \param filepath The filepath of the MIDI file to parse

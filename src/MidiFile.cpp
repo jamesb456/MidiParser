@@ -1,10 +1,13 @@
 #include <fstream>
 #include <iostream>
+
 #include <iterator>
 #include <MidiParser/MidiFile.hpp>
 #include <cstring>
 
-MidiParser::MidiFile::MidiFile(uint8_t format, uint16_t track_num) : format(format), track_num(track_num) {
+#include "Conversion.hpp"
+MidiParser::MidiFile::MidiFile(uint8_t format, uint16_t track_num, uint16_t ticks_per_quarter)
+    : format(format), track_num(track_num), ticks_per_quarter(ticks_per_quarter) {
 
 }
 
@@ -31,10 +34,13 @@ MidiParser::MidiFile MidiParser::MidiFile::parse_midi(const std::filesystem::pat
         char header_length_buffer[4];
         mid_file.read(header_length_buffer, 4);
 
-        uint32_t header_length = 0;
-        for(auto& i : header_length_buffer){
-            header_length = (header_length << 8) | static_cast<uint8_t>(i);
-        }
+        uint32_t header_length = MidiParser::Conversion::from_uint8(
+                header_length_buffer[0],
+                header_length_buffer[1],
+                header_length_buffer[2],
+                header_length_buffer[3]
+        );
+
 
         std::cout << "The header is " << header_length << " bytes long." << std::endl;
 
@@ -53,17 +59,26 @@ MidiParser::MidiFile MidiParser::MidiFile::parse_midi(const std::filesystem::pat
         std::cout << "The MIDI uses track format " << static_cast<uint32_t>(midi_format) << std::endl;
 
         //number of tracks (bytes 10 and 11)
-        uint8_t track_num_high = 0, track_num_low = 0;
-        mid_file >> track_num_high >> track_num_low;
+        uint8_t track_num_low = 0, track_num_high = 0;
+        mid_file >> track_num_high;
+        mid_file >> track_num_low;
 
-        uint16_t track_num = ( static_cast<uint16_t>(track_num_high << 4) | static_cast<uint16_t>(track_num_low));
+        uint16_t track_num = MidiParser::Conversion::from_uint8(track_num_high, track_num_low);
         std::cout << "The number of tracks is " << track_num << std::endl;
 
 
         //timing (bytes 12 and 13)
+        uint8_t timing_low = 0, timing_high = 0;
+        mid_file >> timing_high;
+        mid_file >> timing_low;
+        uint16_t timing =  MidiParser::Conversion::from_uint8(timing_high, timing_low);
+
+        if(timing >= 0x8000){
+            throw std::runtime_error("This MIDI parser cannot currently parse SMPTE timed MIDI files.");
+        }
+        return MidiFile(midi_format, track_num, timing);
 
 
-        return MidiFile(midi_format, track_num);
     } catch (const std::ifstream::failure&) {
         throw std::runtime_error(std::string("Could not parse MIDI with reason: ") + std::strerror(errno));
     }
